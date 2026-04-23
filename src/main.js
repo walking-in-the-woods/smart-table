@@ -7,7 +7,8 @@ import {initData} from "./data.js";
 import {processFormData} from "./lib/utils.js";
 
 import {initTable} from "./components/table.js";
-// @todo: подключение
+// @todo: подключение пагинации
+import { initPagination } from "./components/pagination.js";
 
 
 // Исходные данные используемые в render()
@@ -19,9 +20,14 @@ const {data, ...indexes} = initData(sourceData);
  */
 function collectState() {
     const state = processFormData(new FormData(sampleTable.container));
+    // В collectState приводим rowsPerPage и page к числам
+    const rowsPerPage = parseInt(state.rowsPerPage);
+    const page = parseInt(state.page ?? 1);
 
     return {
-        ...state
+        ...state,
+        rowsPerPage,
+        page
     };
 }
 
@@ -32,20 +38,32 @@ function collectState() {
 function render(action) {
     let state = collectState(); // состояние полей из таблицы
     let result = [...data]; // копируем для последующего изменения
-    // @todo: использование
-
+    // @todo: использование после копирования данных
+    result = applyPagination(result, state, action);
 
     sampleTable.render(result)
 }
 
+// Настройка таблицы (добавляем after: ['pagination'])
 const sampleTable = initTable({
     tableTemplate: 'table',
     rowTemplate: 'row',
     before: [],
-    after: []
+    after: ['pagination']
 }, render);
 
-// @todo: инициализация
+// @todo: инициализация пагинации
+const applyPagination = initPagination(
+    sampleTable.pagination.elements,
+    (el, page, isCurrent) => {
+        const input = el.querySelector('input');
+        const label = el.querySelector('span');
+        input.value = page;
+        input.checked = isCurrent;
+        label.textContent = page;
+        return el;
+    }
+);
 
 
 const appRoot = document.querySelector('#app');
