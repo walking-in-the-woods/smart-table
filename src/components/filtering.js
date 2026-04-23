@@ -20,14 +20,29 @@ export function initFiltering(elements, indexes) {
         // @todo: #4.2 — обработать очистку поля
         if (action && action.name === 'clear') {
             const fieldName = action.dataset.field;
-            const input = action.closest('.filter-wrapper')?.querySelector('input');
-            if (input) {
-                input.value = '';
-                state[fieldName] = '';
+            // Ищем поле ввода внутри родительского элемента кнопки
+            const parent = action.closest('.filter-wrapper, .range-inputs');
+            if (parent) {
+                const input = parent.querySelector('input');
+                if (input) {
+                    input.value = '';
+                    state[fieldName] = '';
+                }
             }
         }
 
+        // Преобразуем totalFrom и totalTo в массив для правила arrayAsRange
+        const filterState = { ...state };
+        if (filterState.totalFrom !== undefined || filterState.totalTo !== undefined) {
+            filterState.total = [
+                filterState.totalFrom || '',
+                filterState.totalTo || ''
+            ];
+            delete filterState.totalFrom;
+            delete filterState.totalTo;
+        }
+
         // @todo: #4.5 — отфильтровать данные используя компаратор
-        return data.filter(row => compare(row, state));
+        return data.filter(row => compare(row, filterState));
     }
 }
