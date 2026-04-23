@@ -7,9 +7,10 @@ import {initData} from "./data.js";
 import {processFormData} from "./lib/utils.js";
 
 import {initTable} from "./components/table.js";
-// @todo: подключение пагинации, сортировки
+// @todo: подключение пагинации, сортировки, фильтрации
 import { initPagination } from "./components/pagination.js";
 import { initSorting } from "./components/sorting.js";
+import { initFiltering } from "./components/filtering.js";
 
 
 // Исходные данные используемые в render()
@@ -39,6 +40,8 @@ function collectState() {
 function render(action) {
     let state = collectState(); // состояние полей из таблицы
     let result = [...data]; // копируем для последующего изменения
+    // Применяем фильтрацию перед сортировкой
+    result = applyFiltering(result, state, action);
     // Применяем сортировку перед пагинацией
     result = applySorting(result, state, action);
     // @todo: использование после копирования данных
@@ -47,11 +50,12 @@ function render(action) {
     sampleTable.render(result)
 }
 
-// Настройка таблицы (добавляем before: ['header'], after: ['pagination'])
+/* Настройка таблицы 
+(добавляем before: ['header', 'filter'], after: ['pagination']) */
 const sampleTable = initTable({
     tableTemplate: 'table',
     rowTemplate: 'row',
-    before: ['header'],
+    before: ['header', 'filter'],
     after: ['pagination']
 }, render);
 
@@ -74,6 +78,10 @@ const applySorting = initSorting([
     sampleTable.header.elements.sortByTotal
 ]);
 
+// Инициализация фильтрации (передаём индексы продавцов)
+const applyFiltering = initFiltering(sampleTable.filter.elements, {
+    searchBySeller: indexes.sellers
+});
 
 const appRoot = document.querySelector('#app');
 appRoot.appendChild(sampleTable.container);
